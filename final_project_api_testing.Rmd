@@ -17,9 +17,7 @@ readRenviron(".Renviron")
 # Input 
 ## Symbol data
 ```{r message=FALSE, warning=FALSE}
-nasdaq <- read_csv("NASDAQ_symbols.csv")
-nyse <- read_csv("NYSE_symbols.csv")
-stock <- bind_rows(nasdaq, nyse)
+stock <- read_csv("stock_symbols.csv")
 check_symbol <- function(text){
   if (toupper(text) %in% stock$symbol){
     df = stock %>% filter(symbol == toupper(text))
@@ -82,7 +80,7 @@ summary(df_minly$Price)
 ```
 
 ## TIME_SERIES_DAILY Closing price
-```{r message=FALSE}
+```{r}
 r <- GET(
   "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY",
   query = list(
@@ -145,7 +143,7 @@ summary(df_daily$Price)
 
 
 ## WMA 5-day daily ma for the past 90 days
-```{r warning=FALSE}
+```{r}
 r <- GET(
   "https://www.alphavantage.co/query?function=WMA",
   query = list(
@@ -171,7 +169,7 @@ df_wma5 <- fromJSON(json, flatten = TRUE) %>%
   mutate(lag = replace_na(lag, "0"),
          lag = as.numeric(lag),
          value = as.numeric(as.character(value))
-         )
+         ) %>% 
 df_wma5
 ```
 
@@ -207,7 +205,7 @@ df_wma30
 ```
 
 ### WMA5 & WMA30 daily ma graph
-```{r warning=FALSE}
+```{r}
 ggplot(df_wma5, aes(x = lag, y = value)) +
   geom_line(aes(color = "WMA5")) +
   geom_line(data = df_wma30, aes(color = "WMA30")) +

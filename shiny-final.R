@@ -149,7 +149,10 @@ ui <- fluidPage(
       textInput(inputId = "sb",
         label = "Enter Stock Symbol",
         value = "PDD"),
-      actionButton(inputId ="go", label = "Show Results")
+      p("You may try PDD, LYFT, NIO, IQ ,TSLA to get a taste of the WebApp. These stocks are relatively fast to load."),
+      p("It takes a while to load datas, please be patient if entered a stock with a long history such as AAPL."),
+      p("It may also takes a little bit to reload when entered a new stock. Switch stocks too quickly might cause a connection lost to the data base."),
+      actionButton(inputId ="go", label = "Show Results"),
     ),
   
   # Output panel
@@ -291,7 +294,8 @@ server <- function(input, output) {
     if (is.na(dat[1]) == TRUE){
       print("Sorry the symbol you enter is not found, please double check and try again.")
     } else {
-      "When WMA5 crosses WMA30, it may indicates a buying opportunity"
+      print("When WMA5 crosses WMA30 on a upward trend, it may indicates a buying opportunity.")
+      print("When WMA5 crosses WMA30 on a downward trend, you might want to set a loss limit.")
     }
   })
   
