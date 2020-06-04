@@ -151,7 +151,7 @@ ui <- fluidPage(
         value = "PDD"),
       p("You may try PDD, LYFT, NIO, IQ ,TSLA to get a taste of the WebApp. These stocks are relatively fast to load."),
       p("It takes a while to load datas, please be patient if entered a stock with a long history such as AAPL."),
-      p("It may also takes a little bit to reload when entered a new stock. Switch stocks too quickly might cause a connection lost to the data base."),
+      p("It may also takes a little bit to reload when entered a new stock. Switching stocks too quickly might cause a connection error to the data base."),
       actionButton(inputId ="go", label = "Show Results"),
     ),
   
