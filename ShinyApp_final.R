@@ -147,10 +147,11 @@ ui <- fluidPage(
       textInput(inputId = "sb",
         label = "Enter Stock Symbol",
         value = "PDD"),
-      p("You may try PDD, LYFT, NIO, IQ ,TSLA to get a taste of the WebApp. These stocks are relatively fast to load."),
-      p("It takes a while to load datas, please be patient if entered a stock with a long history such as AAPL."),
+      p("You may try PDD, LYFT, NIO, IQ, TSLA to get a taste of the WebApp. These stocks are relatively fast to load."),
+      p("It takes a while to load data, please be patient if entered a stock with a long history such as AAPL."),
       p("It may also takes a little bit to reload when entered a new stock. 
-        Switching stocks too quickly might cause a connection error to the data base."),
+        Switching stocks too quickly might cause errors when sorting through the data."),
+      p("When an error occurs, wait a minut and click the \"Show Results\" button again."),
       actionButton(inputId ="go", label = "Show Results"),
     ),
   
@@ -177,103 +178,114 @@ server <- function(input, output) {
     print("The stock symbol you entered is not found, please double check and try again.")
   })
     
-  # Data and Output for the first tap "Latest Trade Day"
+  # Data for the first tap "Latest Trade Day"
   data_1 <- eventReactive(input$go, {
-    dat <- get_symbol(input$sb)
+    dat = get_symbol(input$sb)
     req(is.na(dat[1]) == FALSE)
     get_minly(dat$symbol)
   })
-  output$one <- renderPlot({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
-    ggplot(data_1(), aes(x = Date, y = Price)) +
-      geom_line()  +
-      ggtitle(paste0("Latest Stock Prices on ", data_1()$Date[1] ,": ", dat$stock_name)) +
-      theme(plot.title = element_text(lineheight = 0.7, face = "bold"))
-  })
-  output$onetwo <- renderPrint({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
-    summary(data_1()$Price)
-  })
   
-  # Data and Output for the second tap "Six Months"
+  # Data and for the second to fourth tap "Six Months"
   data_2 <- eventReactive(input$go, {
-    dat <- get_symbol(input$sb)
+    dat = get_symbol(input$sb)
     req(is.na(dat[1]) == FALSE)
     get_daily(dat$symbol)
   })
-  output$two <- renderPlot({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
+  
+  # Data for the fifth tap "Weighted Moving Average"
+  data_3 <- eventReactive(input$go, {
+    dat = get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE)
+    df_1 = get_wma5(dat$symbol)
+    df_2 = get_wma30(dat$symbol)
+    bind_cols(df_1, df_2)
+  })
+  
+  # Output for the first tap "Latest Trade Day"
+  g_1 <- eventReactive(input$go,{
+    req(is.na(get_symbol(input$sb)[1]) == FALSE)
+    ggplot(data_1(), aes(x = Date, y = Price)) +
+      geom_line()  +
+      ggtitle(paste0("Latest Stock Prices on ", data_1()$Date[1] ,": ", get_symbol(input$sb)$stock_name)) +
+      theme(plot.title = element_text(lineheight = 0.7, face = "bold"))
+  })
+  output$one <- renderPlot({
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    g_1()
+  })
+  output$onetwo <- renderPrint({
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    summary(data_1()$Price)
+  })
+  
+  # Output for the second tab
+  g_2 <- eventReactive(input$go,{
+    req(is.na(get_symbol(input$sb)[1]) == FALSE)
     ggplot(data_2() %>% head(127), aes(x = Date, y = Price)) +
       geom_line() +
-      ggtitle(paste0("Stock Prices for the Past 6 Months: ", dat$stock_name)) +
+      ggtitle(paste0("Stock Prices for the Past 6 Months: ", get_symbol(input$sb)$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
+  output$two <- renderPlot({
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    g_2()
+  })
   output$twotwo <- renderPrint({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     summary(data_2()$Price %>% head(127))
   })
   
   # Output for the third tap "One Year"
-  output$three <- renderPlot({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
+  g_3 <- eventReactive(input$go,{
+    req(is.na(get_symbol(input$sb)[1]) == FALSE)
     ggplot(data_2() %>% head(253), aes(x = Date, y = Price)) +
       geom_line() +
-      ggtitle(paste0("Stock Prices for the Past Year: ", dat$stock_name)) +
+      ggtitle(paste0("Stock Prices for the Past Year: ", get_symbol(input$sb)$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
+  output$three <- renderPlot({
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    g_3()
+  })
   output$threetwo <- renderPrint({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     summary(data_2()$Price %>% head(253))
   })
   
   # Output for the forth tap "Historic"
-  output$four <- renderPlot({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
+  g_4 <- eventReactive(input$go,{
+    req(is.na(get_symbol(input$sb)[1]) == FALSE)
     ggplot(data_2(), aes(x = Date, y = Price)) +
       geom_line() +
-      ggtitle(paste0("Historic Stock Prices: ", dat$stock_name)) +
+      ggtitle(paste0("Historic Stock Prices: ", get_symbol(input$sb)$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
+  output$four <- renderPlot({
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    g_4()
+  })
   output$fourtwo <- renderPrint({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     summary(data_2()$Price)
   })
   
-  # Data and Output for the fifth tap "Weighted Moving Average"
-  data_3 <- eventReactive(input$go, {
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE)
-    get_wma5(dat$symbol)
-  })
-  data_4 <- eventReactive(input$go, {
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE)
-    get_wma30(dat$symbol)
-  })
-
-  output$five <- renderPlot({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
+  # Output for the fifth tap "Weighted Moving Average"
+  g_5 <- eventReactive(input$go,{
+    req(is.na(get_symbol(input$sb)[1]) == FALSE)
     ggplot() +
       geom_line(data = data_3(), mapping = aes(x = lag, y = value, color = "WMA5")) +
-      geom_line(data = data_4(), mapping = aes(x = lagf, y = valuef, color = "WMA30")) +
+      geom_line(data = data_3(), mapping = aes(x = lagf, y = valuef, color = "WMA30")) +
       scale_x_reverse() +
-      labs(color = "MA Days in Period") +
-      ggtitle(paste0("Weighted Moving Average: ", dat$stock_name)) +
+      labs(color = "MA: Days in Period") +
+      ggtitle(paste0("Weighted Moving Average: ", get_symbol(input$sb)$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
-  
+  output$five <- renderPlot({
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    g_5()
+  })
   output$fivetwo <- renderText({
-    dat <- get_symbol(input$sb)
-    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
+    req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     print("When WMA5 crosses WMA30 on a upward trend, it may indicates a buying opportunity. 
           When WMA5 crosses WMA30 on a downward trend, you might want to set a loss limit.")
   })
