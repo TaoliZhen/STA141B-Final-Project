@@ -37,7 +37,7 @@ get_minly <- function(syb){
       names_to = "Date",
       names_prefix = "Time.Series..1min.."
     ) %>% 
-    head(388) %>% 
+    head(380) %>% 
     mutate(Date = gsub("^.........$","", Date),
            Date = as_datetime(Date),
            Price = as.numeric(as.character(value))

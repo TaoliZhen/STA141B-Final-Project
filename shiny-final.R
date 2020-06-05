@@ -1,4 +1,3 @@
-# 03-reactive
 
 library(shiny)
 library(httr)
@@ -14,7 +13,6 @@ get_symbol <- function(syb){
     df = stock %>% filter(symbol == toupper(syb))
     return(df)
   } else {
-    #return("Sorry the symbol you enter is not found, please double check and try again.")
     return(NA)
   }
 }
@@ -39,7 +37,7 @@ get_minly <- function(syb){
       names_to = "Date",
       names_prefix = "Time.Series..1min.."
     ) %>% 
-    head(385) %>% 
+    head(388) %>% 
     mutate(Date = gsub("^.........$","", Date),
            Date = as_datetime(Date),
            Price = as.numeric(as.character(value))
@@ -149,11 +147,10 @@ ui <- fluidPage(
       textInput(inputId = "sb",
         label = "Enter Stock Symbol",
         value = "PDD"),
-      p("You may try LYFT, NIO, PDD,TSLA to get a taste of the WebApp. These stocks are relatively fast to load."),
+      p("You may try PDD, LYFT, NIO, IQ ,TSLA to get a taste of the WebApp. These stocks are relatively fast to load."),
       p("It takes a while to load datas, please be patient if entered a stock with a long history such as AAPL."),
       p("It may also takes a little bit to reload when entered a new stock. 
-        Switching stocks/taps too quickly might cause a connection error to the data base."),
-      p("When a error message is displayed, wait a minute then click the \"Show Result\" button again."),
+        Switching stocks too quickly might cause a connection error to the data base."),
       actionButton(inputId ="go", label = "Show Results"),
     ),
   
@@ -176,87 +173,95 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   output$checksb <- renderText({
-    req(is.na(check_symbol(input$sb)[1]))
-    "Sorry the symbol you enter is not found, please double check and try again."
+    req(is.na(get_symbol(input$sb)[1]))
+    print("The stock symbol you entered is not found, please double check and try again.")
   })
-
+    
   # Data and Output for the first tap "Latest Trade Day"
   data_1 <- eventReactive(input$go, {
     dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE)
     get_minly(dat$symbol)
   })
   output$one <- renderPlot({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     ggplot(data_1(), aes(x = Date, y = Price)) +
       geom_line()  +
       ggtitle(paste0("Latest Stock Prices on ", data_1()$Date[1] ,": ", dat$stock_name)) +
       theme(plot.title = element_text(lineheight = 0.7, face = "bold"))
   })
   output$onetwo <- renderPrint({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     summary(data_1()$Price)
   })
   
   # Data and Output for the second tap "Six Months"
   data_2 <- eventReactive(input$go, {
     dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE)
     get_daily(dat$symbol)
   })
   output$two <- renderPlot({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     ggplot(data_2() %>% head(127), aes(x = Date, y = Price)) +
       geom_line() +
       ggtitle(paste0("Stock Prices for the Past 6 Months: ", dat$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
   output$twotwo <- renderPrint({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     summary(data_2()$Price %>% head(127))
   })
   
   # Output for the third tap "One Year"
   output$three <- renderPlot({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     ggplot(data_2() %>% head(253), aes(x = Date, y = Price)) +
       geom_line() +
       ggtitle(paste0("Stock Prices for the Past Year: ", dat$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
   output$threetwo <- renderPrint({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     summary(data_2()$Price %>% head(253))
   })
   
   # Output for the forth tap "Historic"
   output$four <- renderPlot({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     ggplot(data_2(), aes(x = Date, y = Price)) +
       geom_line() +
       ggtitle(paste0("Historic Stock Prices: ", dat$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
   output$fourtwo <- renderPrint({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     summary(data_2()$Price)
   })
   
   # Data and Output for the fifth tap "Weighted Moving Average"
   data_3 <- eventReactive(input$go, {
     dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE)
     get_wma5(dat$symbol)
   })
   data_4 <- eventReactive(input$go, {
     dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE)
     get_wma30(dat$symbol)
   })
 
   output$five <- renderPlot({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     ggplot() +
       geom_line(data = data_3(), mapping = aes(x = lag, y = value, color = "WMA5")) +
       geom_line(data = data_4(), mapping = aes(x = lagf, y = valuef, color = "WMA30")) +
@@ -267,7 +272,8 @@ server <- function(input, output) {
   })
   
   output$fivetwo <- renderText({
-    req(is.na(check_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
+    dat <- get_symbol(input$sb)
+    req(is.na(dat[1]) == FALSE, cancelOutput = TRUE)
     print("When WMA5 crosses WMA30 on a upward trend, it may indicates a buying opportunity. 
           When WMA5 crosses WMA30 on a downward trend, you might want to set a loss limit.")
   })
