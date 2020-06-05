@@ -61,7 +61,7 @@ df_minly <- fromJSON(json, flatten = TRUE) %>%
     names_to = "Date",
     names_prefix = "Time.Series..1min.."
   ) %>% 
-  head(390) %>% 
+  head(388) %>% 
   mutate(Date = gsub("^.........$","", Date),
          Date = as_datetime(Date),
          Price = as.numeric(as.character(value))
