@@ -157,7 +157,7 @@ ui <- fluidPage(
   
   # Output panel
     mainPanel(
-      textOutput("checksb"),
+      htmlOutput("checksb"),
       tabsetPanel(
         tabPanel("Latest Trade Day", plotOutput("one"), verbatimTextOutput("onetwo")),
         tabPanel("Six Months", plotOutput("two"), verbatimTextOutput("twotwo")),
@@ -175,7 +175,7 @@ server <- function(input, output) {
   
   output$checksb <- renderText({
     req(is.na(get_symbol(input$sb)[1]))
-    print("The stock symbol you entered is not found, please double check and try again.")
+    print("<b style=\"color:red;\">The stock symbol you entered is not found, please double check and try again.<br>")
   })
     
   # Data for the first tap "Latest Trade Day"
@@ -213,6 +213,7 @@ server <- function(input, output) {
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     g_1()
   })
+  
   output$onetwo <- renderPrint({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     summary(data_1()$Price)
@@ -226,10 +227,12 @@ server <- function(input, output) {
       ggtitle(paste0("Stock Prices for the Past 6 Months: ", get_symbol(input$sb)$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
+  
   output$two <- renderPlot({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     g_2()
   })
+  
   output$twotwo <- renderPrint({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     summary(data_2()$Price %>% head(127))
@@ -243,10 +246,12 @@ server <- function(input, output) {
       ggtitle(paste0("Stock Prices for the Past Year: ", get_symbol(input$sb)$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
+  
   output$three <- renderPlot({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     g_3()
   })
+  
   output$threetwo <- renderPrint({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     summary(data_2()$Price %>% head(253))
@@ -260,10 +265,12 @@ server <- function(input, output) {
       ggtitle(paste0("Historic Stock Prices: ", get_symbol(input$sb)$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
+  
   output$four <- renderPlot({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     g_4()
   })
+  
   output$fourtwo <- renderPrint({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     summary(data_2()$Price)
@@ -280,10 +287,12 @@ server <- function(input, output) {
       ggtitle(paste0("Weighted Moving Average: ", get_symbol(input$sb)$stock_name)) +
       theme(plot.title = element_text(lineheight = 1, face = "bold"))
   })
+  
   output$five <- renderPlot({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     g_5()
   })
+  
   output$fivetwo <- renderText({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     print("When WMA5 crosses WMA30 on a upward trend, it may indicates a buying opportunity. 
