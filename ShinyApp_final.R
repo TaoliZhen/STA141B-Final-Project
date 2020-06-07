@@ -6,9 +6,11 @@ library(jsonlite)
 library(lubridate)
 readRenviron(".Renviron")
 
+# Get US stock symbol, only NASDAQ and NYSE
 stock <- read_csv("stock_symbols.csv")
+
+# A function to check the input exits in the US stock market.
 get_symbol <- function(syb){
-  # A function to check the input exits in the US stock market.
   if (toupper(syb) %in% stock$symbol){
     df = stock %>% filter(symbol == toupper(syb))
     return(df)
@@ -17,6 +19,7 @@ get_symbol <- function(syb){
   }
 }
 
+# Function 1 which connect to the API for the first TAP
 get_minly <- function(syb){
   r <- GET(
     "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY",
@@ -45,6 +48,7 @@ get_minly <- function(syb){
   df
 }
 
+# Function 2 which connect to the API for the Second, Third, and forth TAP
 get_daily <- function(syb){
   r <- GET(
     "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY",
@@ -74,6 +78,7 @@ get_daily <- function(syb){
   df_daily
 }
 
+# Function 3 which connect to the API for the Fifth TAP
 get_wma5 <- function(syb){
   r <- GET(
     "https://www.alphavantage.co/query?function=WMA",
@@ -104,6 +109,7 @@ get_wma5 <- function(syb){
   df_wma5
 }
 
+# Function 4 which connect to the API for the Fifth TAP
 get_wma30 <- function(syb){
   r <- GET(
     "https://www.alphavantage.co/query?function=WMA",
@@ -141,7 +147,7 @@ ui <- fluidPage(
   # Choose a overall layout
   sidebarLayout(
     
-  # Choose a input panel
+    # Choose a input panel
     sidebarPanel(
 
       textInput(inputId = "sb",
@@ -155,7 +161,7 @@ ui <- fluidPage(
       actionButton(inputId ="go", label = "Show Results"),
     ),
   
-  # Output panel
+    # Output panel
     mainPanel(
       htmlOutput("checksb"),
       tabsetPanel(
@@ -173,26 +179,27 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
+  # If the input stock symbol does not exit, print a warning 
   output$checksb <- renderText({
     req(is.na(get_symbol(input$sb)[1]))
     print("<b style=\"color:red;\">The stock symbol you entered is not found, please double check and try again.<br>")
   })
     
-  # Data for the first tap "Latest Trade Day"
+  # Data for the first tap "Latest Trade Day", call function 1
   data_1 <- eventReactive(input$go, {
     dat = get_symbol(input$sb)
     req(is.na(dat[1]) == FALSE)
     get_minly(dat$symbol)
   })
   
-  # Data and for the second to fourth tap "Six Months"
+  # Data and for the second to fourth tap "Six Months", call function 2
   data_2 <- eventReactive(input$go, {
     dat = get_symbol(input$sb)
     req(is.na(dat[1]) == FALSE)
     get_daily(dat$symbol)
   })
   
-  # Data for the fifth tap "Weighted Moving Average"
+  # Data for the fifth tap "Weighted Moving Average", call function 3 and 4
   data_3 <- eventReactive(input$go, {
     dat = get_symbol(input$sb)
     req(is.na(dat[1]) == FALSE)
@@ -209,6 +216,7 @@ server <- function(input, output) {
       ggtitle(paste0("Latest Stock Prices on ", data_1()$Date[1] ,": ", get_symbol(input$sb)$stock_name)) +
       theme(plot.title = element_text(lineheight = 0.7, face = "bold"))
   })
+  
   output$one <- renderPlot({
     req(is.na(get_symbol(input$sb)[1]) == FALSE, cancelOutput = TRUE)
     g_1()
