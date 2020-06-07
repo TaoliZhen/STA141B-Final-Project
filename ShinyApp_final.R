@@ -97,8 +97,8 @@ get_wma5 <- function(syb){
     ) %>% 
     head(91) %>% 
     separate(col = "ma_lag", c("indicator", "lag"), sep = "[.]") %>% 
-    mutate(lag = replace_na(lag, "0"),
-           lag = as.numeric(lag),
+    transmute(
+           lag = as.numeric(replace_na(lag, "0")),
            value = as.numeric(as.character(value))
     )
   df_wma5
@@ -127,8 +127,8 @@ get_wma30 <- function(syb){
     ) %>% 
     head(91) %>% 
     separate(col = "ma_lag", c("indicator", "lag"), sep = "[.]") %>% 
-    mutate(lag = replace_na(lag, "0"),
-           lagf = as.numeric(lag),
+    transmute(
+           lagf = as.numeric(replace_na(lag, "0")),
            valuef = as.numeric(as.character(value))
     )
   df_wma30
@@ -149,9 +149,9 @@ ui <- fluidPage(
         value = "PDD"),
       p("You may try PDD, LYFT, NIO, IQ, TSLA to get a taste of the WebApp. These stocks are relatively fast to load."),
       p("It takes a while to load data, please be patient if entered a stock with a long history such as AAPL."),
-      p("It may also takes a little bit to reload when entered a new stock. 
-        Switching stocks too quickly might cause errors when sorting through the data."),
-      p("When an error occurs, wait a minut and click the \"Show Results\" button again."),
+      p("Due to the limitation of the my free API access which only allow 5 queries per minute, 
+        checking more than one stock in a minute will cause errors as checking one stock will make 4 queries."),
+      p("When an error occurs, wait ONE minute and click the \"Show Results\" button again."),
       actionButton(inputId ="go", label = "Show Results"),
     ),
   
